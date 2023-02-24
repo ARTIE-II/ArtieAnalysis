@@ -1,0 +1,18 @@
+Metadata-Version: 2.1
+Name: artie-analysis
+Version: 1.0.0
+Summary: Analysis code for ARTIE-II
+Home-page: https://github.com/ARTIE-II/ArtieAnalysis
+Author: Junying Huang
+Author-email: jyhuang@ucdavis.edu
+Keywords: ARTIE
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Experimental Physics
+Classifier: License :: GNU
+Classifier: Natural Language :: English
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Requires-Python: >3.7
+Description-Content-Type: text/markdown
+
+# ArtieAnalysis
