@@ -1,8 +1,8 @@
 import numpy as np
 
 class EnergyFromTOF:
-    def __init__(self, tof):
-        self.L = 1 # need to replace with the actual length
+    def __init__(self, tof, L):
+        self.L = L # need to replace with the actual length
         self.c = 299792458 #speed of light in m/s
         self.m = 1.67492749804E-27 #neutron mass in kg
         self.FWHM1 = 1.95
