@@ -41,6 +41,8 @@ model_1700.flush()
 if (model_1700.isOpen()):
     print("model_1700 level sensor port open")
 
+"""Set model 1700 to units of cm"""
+model_1700.write('CONFigure:N2:UNIT CM'.encode(encoding = 'UTF-8'))
 
 """Set up output file"""
 tnow = datetime.now()
@@ -74,7 +76,7 @@ for x in range(len(lakeshore_channel_locations)) :
 top_line="Time (s)"
 for x in range(len(lakeshore_channel_locations)) :
     top_line += ("," + lakeshore_channel_locations[x])
-top_line += ',N2 Level,He Level'
+top_line += ',N2 Level'
 output_file.write(top_line + "\n")
 print(top_line)
 
@@ -82,7 +84,7 @@ print(top_line)
 fig, ax1 = plt.subplots(figsize=(12,7))
 ax2 = ax1.twinx()
 ax1.set_xlabel("Time [s]")
-ax2.set_ylabel("Liquid level [%]")
+ax2.set_ylabel("Liquid level [cm]")
 ax1.set_ylabel("Temperature [K]")
 ax1.set_title(f"ARTIE-II Sensor Readings {timestamp}")
 
@@ -97,6 +99,7 @@ def read_all(ii) :
     a lakeshore_timestamp for the reading value.  The command
     for getting all output values is 'KRDG? 0 \r\n'
     """
+    
     lakeshore_command = "KRDG? 0 \r\n"
     reading_time = round(time.time()-TIME_0, 2)
     lakeshore.write(lakeshore_command.encode(encoding = 'UTF-8'))
@@ -107,12 +110,11 @@ def read_all(ii) :
     
     """Ask the model_1700 level sensor for certain info"""
     command_n2 = 'MEASure:N2:LEVel?\n'
-    command_he = 'MEASure:HE:LEVel?\n'
     model_1700.write(command_n2.encode(encoding = 'UTF-8'))
-    n2_response = model_1700.readline().decode().replace('\n','').replace('\r','')
-    model_1700.write(command_he.encode(encoding = 'UTF-8'))
-    he_response = model_1700.readline().decode().replace('\n','').replace('\r','')
-    output_values += f',{n2_response},{he_response}'
+    n2_response = ''
+    while n2_response == '':
+        n2_response = model_1700.readline().decode().replace('\n','').replace('\r','')
+    output_values += f',{n2_response}'
     
     print(output_values)
     output_file.write(output_values + "\n")
@@ -121,26 +123,28 @@ def read_all(ii) :
     output_file.flush()
     
     """Update live plot"""
-    t_data.append(reading_time)
-    lakeshore_values = readback.split(',')
-    ch1_data.append(float(lakeshore_values[0]))
-    ch2_data.append(float(lakeshore_values[1]))
-    ch3_data.append(float(lakeshore_values[2]))
-    ch4_data.append(float(lakeshore_values[3]))
-    ch5_data.append(float(lakeshore_values[4]))
-    ch6_data.append(float(lakeshore_values[5]))
-    ch7_data.append(float(lakeshore_values[6]))
-    ch8_data.append(float(lakeshore_values[7]))
-    n2_data.append(float(n2_response))
-    he_data.append(float(he_response))
+    if (ii > 5):
+        t_data.append(reading_time)
+        lakeshore_values = readback.split(',')
+    
+        ch1_data.append(float(lakeshore_values[0]))
+        ch2_data.append(float(lakeshore_values[1]))
+        ch3_data.append(float(lakeshore_values[2]))
+        ch4_data.append(float(lakeshore_values[3]))
+        ch5_data.append(float(lakeshore_values[4]))
+        ch6_data.append(float(lakeshore_values[5]))
+        ch7_data.append(float(lakeshore_values[6]))
+        ch8_data.append(float(lakeshore_values[7]))
+        n2_data.append(float(n2_response))
     
     ax1.clear()
     ax2.clear()
-    ax1.plot(t_data, ch1_data, label=lakeshore_channel_locations[0])
-    ax1.plot(t_data, ch2_data, label=lakeshore_channel_locations[1])
-    ax1.plot(t_data, ch3_data, label=lakeshore_channel_locations[2])
-    ax1.plot(t_data, ch4_data, label=lakeshore_channel_locations[3])
-    ax2.plot(t_data, n2_data, label=r'N$_2$ %', linestyle='-')
+    if (ii > 5):
+        ax1.plot(t_data, ch1_data, label=lakeshore_channel_locations[0])
+        ax1.plot(t_data, ch2_data, label=lakeshore_channel_locations[1])
+        ax1.plot(t_data, ch3_data, label=lakeshore_channel_locations[2])
+        ax1.plot(t_data, ch4_data, label=lakeshore_channel_locations[3])
+        ax2.plot(t_data, n2_data, label=r'liquid level', linestyle=':', c='k')
     ax1.legend(bbox_to_anchor=(1.05, 1.0), loc='upper left')
     ax2.legend()
     plt.tight_layout()
@@ -150,6 +154,7 @@ def read_all(ii) :
 
 if __name__ == "__main__":
     """As long as this scrip is running and/or the connection to the serial device is open""" 
+    model_1700.write('CONFigure:N2:UNIT CM\n'.encode(encoding = 'UTF-8'))
     ani = FuncAnimation(fig, read_all, interval=10)
     plt.show()
     plt.savefig('sensors_' + timestamp + '.png')
